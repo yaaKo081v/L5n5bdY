@@ -1,0 +1,53 @@
+version: '3.2'
+
+volumes:
+  mongo-db-data:
+  mysql-db-data:
+
+networks:
+  default:
+    external:
+      name: judge-girl
+
+services:
+  mongodb:
+    image: mongo:4.4.10
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: PLACEHOLDER
+      MONGO_INITDB_ROOT_PASSWORD: PLACEHOLDER
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo-db-data:/data/db
+    command: --bind_ip 0.0.0.0
+  mysql:
+    image: mysql:8.0.27
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: PLACEHOLDER
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql-db-data:/var/lib/mysql
+      - ./etc/init-databases.sql:/data/application/init-db.sql
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --init-file=/data/application/init-db.sql
+    cap_add:
+      - SYS_NICE
+  rabbitmq:
+    image: rabbitmq:3.8.23
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: judge-girl-service
+      RABBITMQ_DEFAULT_PASS: service-girl-judge
+      RABBITMQ_DEFAULT_VHOST: /judge-girl
+    ports:
+      - 5672:5672
+  redis:
+    image: redis:6.2.6
+    restart: always
+    ports:
+      - 6379:6379
+    command: redis-server --requirepass PLACEHOLDER
